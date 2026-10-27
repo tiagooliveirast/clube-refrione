@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/data.ts","./src/main.tsx","./src/vite-env.d.ts","./src/components/Icon.tsx","./src/components/Logo.tsx","./src/components/TabBar.tsx","./src/pages/Balcao.tsx","./src/pages/Carteirinha.tsx","./src/pages/Conta.tsx","./src/pages/Inicio.tsx","./src/pages/Ofertas.tsx","./src/pages/Refriclube.tsx","./vite.config.ts"],"version":"5.9.3"}
