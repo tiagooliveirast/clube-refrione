@@ -5,6 +5,7 @@ import { mensagemErro } from '../../lib/formato';
 import { useAuth } from '../../auth/AuthProvider';
 import { Aviso, Erro } from '../../components/Estados';
 import { Icon } from '../../components/Icon';
+import { BotaoGoogle } from '../../components/BotaoGoogle';
 import { AuthLayout } from './AuthLayout';
 
 export function Cadastro() {
@@ -86,6 +87,7 @@ export function Cadastro() {
           {enviando ? 'Criando conta…' : 'Criar conta'}
         </button>
       </form>
+      <BotaoGoogle />
       <p className="small muted text-center">
         Já tem conta? <Link to="/entrar" className="strong">Entrar</Link>
       </p>
