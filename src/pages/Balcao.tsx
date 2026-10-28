@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { Erro } from '../components/Estados';
 import { useAuth } from '../auth/AuthProvider';
@@ -95,7 +96,11 @@ export function Balcao() {
             <span className="xsmall on-dark-muted">{perfil?.nome}</span>
           </div>
         </div>
-        <button className="btn ghost light" onClick={sair}>Sair</button>
+        {perfil?.papel === 'admin' ? (
+          <Link to="/admin" className="btn ghost light">Painel</Link>
+        ) : (
+          <button className="btn ghost light" onClick={sair}>Sair</button>
+        )}
       </header>
 
       <main className="content">

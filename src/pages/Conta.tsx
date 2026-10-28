@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { StatusPill } from '../components/StatusPill';
 import { Carregando, Vazio } from '../components/Estados';
@@ -119,6 +120,23 @@ export function Conta() {
               ))}
             </div>
           ))}
+
+        {(perfil.papel === 'admin' || perfil.papel === 'vendedor') && (
+          <div className="card list">
+            {perfil.papel === 'admin' && (
+              <Link to="/admin" className="list-item">
+                <Icon name="home" size={20} className="blue" />
+                <span className="grow strong">Painel do clube</span>
+                <Icon name="chevronRight" size={16} stroke={2.2} className="faint" />
+              </Link>
+            )}
+            <Link to="/balcao" className="list-item">
+              <Icon name="scan" size={20} className="blue" />
+              <span className="grow strong">Balcão (validar associado)</span>
+              <Icon name="chevronRight" size={16} stroke={2.2} className="faint" />
+            </Link>
+          </div>
+        )}
 
         <div className="card list">
           {config?.regulamento_url && (

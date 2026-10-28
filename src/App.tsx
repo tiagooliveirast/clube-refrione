@@ -13,6 +13,17 @@ import { Entrar } from './pages/auth/Entrar';
 import { Cadastro } from './pages/auth/Cadastro';
 import { RecuperarSenha } from './pages/auth/RecuperarSenha';
 import { NovaSenha } from './pages/auth/NovaSenha';
+import { AdminLayout } from './admin/AdminLayout';
+import { VisaoGeral } from './admin/VisaoGeral';
+import { Associados } from './admin/Associados';
+import { AssociadoDetalhe } from './admin/AssociadoDetalhe';
+import { OfertasAdmin } from './admin/OfertasAdmin';
+import { CuponsAdmin } from './admin/CuponsAdmin';
+import { EventosAdmin } from './admin/EventosAdmin';
+import { ComunicadosAdmin } from './admin/ComunicadosAdmin';
+import { PlanosAdmin } from './admin/PlanosAdmin';
+import { EquipeAdmin } from './admin/EquipeAdmin';
+import { ConfiguracoesAdmin } from './admin/ConfiguracoesAdmin';
 
 export function App() {
   const { pathname } = useLocation();
@@ -32,6 +43,19 @@ export function App() {
       <Route path="/recuperar-senha" element={<RecuperarSenha />} />
       <Route path="/nova-senha" element={<NovaSenha />} />
 
+      <Route path="/admin" element={<Protegido papeis={['admin']} semMoldura><AdminLayout /></Protegido>}>
+        <Route index element={<VisaoGeral />} />
+        <Route path="associados" element={<Associados />} />
+        <Route path="associados/:id" element={<AssociadoDetalhe />} />
+        <Route path="ofertas" element={<OfertasAdmin />} />
+        <Route path="cupons" element={<CuponsAdmin />} />
+        <Route path="eventos" element={<EventosAdmin />} />
+        <Route path="comunicados" element={<ComunicadosAdmin />} />
+        <Route path="planos" element={<PlanosAdmin />} />
+        <Route path="equipe" element={<EquipeAdmin />} />
+        <Route path="configuracoes" element={<ConfiguracoesAdmin />} />
+      </Route>
+
       <Route path="/balcao" element={<Protegido papeis={['vendedor', 'admin']} escuro><Balcao /></Protegido>} />
 
       <Route path="/" element={<Protegido comMenu><Inicio /></Protegido>} />
@@ -49,10 +73,12 @@ function Protegido({
   comMenu,
   escuro,
   papeis,
+  semMoldura,
 }: {
   children: ReactNode;
   comMenu?: boolean;
   escuro?: boolean;
+  semMoldura?: boolean;
   papeis?: ('associado' | 'vendedor' | 'admin')[];
 }) {
   const { carregando, sessao, perfil } = useAuth();
@@ -74,6 +100,7 @@ function Protegido({
     );
   }
   if (papeis && !papeis.includes(perfil.papel)) return <Navigate to="/" replace />;
+  if (semMoldura) return <>{children}</>;
 
   return (
     <div className={escuro ? 'shell dark-shell' : 'shell'}>
