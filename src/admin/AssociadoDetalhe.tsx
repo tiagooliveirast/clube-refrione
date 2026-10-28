@@ -55,6 +55,8 @@ export function AssociadoDetalhe() {
   const [pagSalvando, setPagSalvando] = useState(false);
   const [pagErro, setPagErro] = useState('');
 
+  const [sincronizando, setSincronizando] = useState(false);
+
   const carregar = useCallback(async () => {
     if (!id) return;
     const { data: d, error } = await supabase.from('vw_associados').select('*').eq('id', id).maybeSingle();
@@ -127,6 +129,20 @@ export function AssociadoDetalhe() {
     if (error) return setPagErro(mensagemErro(error));
     setPagAberto(false);
     setAviso('Pagamento registrado. O associado está ativo e a próxima cobrança foi atualizada.');
+    carregar();
+  }
+
+  async function sincronizarRefriclube() {
+    if (!a) return;
+    setErro('');
+    setAviso('');
+    setSincronizando(true);
+    const { data: r, error } = await supabase.functions.invoke('sincronizar-refriclube', { body: { associado_id: a.id } });
+    setSincronizando(false);
+    if (error) return setErro('Não foi possível falar com o Refriclube agora. Tente de novo em alguns minutos.');
+    const res = r as { erros?: number } | null;
+    if (res?.erros) setErro('O Refriclube recusou a sincronização. Veja o motivo no quadro do Refriclube.');
+    else setAviso('Refriclube sincronizado.');
     carregar();
   }
 
@@ -212,7 +228,7 @@ export function AssociadoDetalhe() {
               <textarea id="obs" rows={3} value={obsEd} onChange={(e) => setObsEd(e.target.value)} />
             </Campo>
             {statusEd === 'cancelado' && a.status !== 'cancelado' && (
-              <div className="alerta aviso">Ao cancelar, o associado perde os benefícios e o acesso ao Refriclube na próxima sincronização.</div>
+              <div className="alerta aviso">Ao cancelar, o associado perde os benefícios e o acesso ao Refriclube é revogado na hora.</div>
             )}
             <button className="btn primary" type="submit" disabled={salvando}>
               {salvando ? 'Salvando…' : 'Salvar alterações'}
@@ -220,6 +236,30 @@ export function AssociadoDetalhe() {
           </form>
         </section>
       </div>
+
+      <section className="adm-bloco">
+        <div className="row-between gap-10">
+          <div className="col gap-2">
+            <h2 className="h-sm">Acesso ao Refriclube</h2>
+            <span className="muted xsmall">
+              {a.refriclube_ativo ? 'Liberado' : 'Não liberado'}
+              {a.refriclube_sincronizado_em ? ` · última sincronização ${dataHora(a.refriclube_sincronizado_em)}` : ' · ainda não sincronizado'}
+            </span>
+          </div>
+          <button className="btn outline sm" onClick={sincronizarRefriclube} disabled={sincronizando}>
+            {sincronizando ? 'Sincronizando…' : 'Sincronizar agora'}
+          </button>
+        </div>
+        <span className="small muted">
+          {a.status === 'ativo' && a.plano_inclui_refriclube
+            ? 'Associado ativo em plano com Refriclube: o acesso deve estar liberado.'
+            : a.plano_inclui_refriclube
+              ? 'O acesso é liberado automaticamente quando o associado ficar ativo.'
+              : 'O plano deste associado não inclui o Refriclube.'}
+        </span>
+        {a.refriclube_aviso && <div className="alerta aviso">{a.refriclube_aviso}</div>}
+        {a.refriclube_erro && <Erro>Falha na última tentativa: {a.refriclube_erro}</Erro>}
+      </section>
 
       <section className="adm-bloco">
         <h2 className="h-sm">Pagamentos</h2>

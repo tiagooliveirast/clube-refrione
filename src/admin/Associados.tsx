@@ -29,6 +29,10 @@ export interface LinhaAssociado {
   email: string;
   telefone: string | null;
   papel: string;
+  refriclube_sincronizado_em: string | null;
+  refriclube_erro: string | null;
+  refriclube_aviso: string | null;
+  plano_inclui_refriclube: boolean;
 }
 
 const POR_PAGINA = 25;

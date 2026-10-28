@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { mensagemErro, reais } from '../lib/formato';
 import { Carregando, Erro, Vazio } from '../components/Estados';
-import { Cabecalho, Kpi, dataHora } from './ui';
+import { Cabecalho, Kpi, baixarCsv, dataHora } from './ui';
+import type { LinhaAssociado } from './Associados';
 
 interface Indicadores {
   ativos: number;
@@ -34,6 +35,8 @@ export function VisaoGeral() {
   const [ind, setInd] = useState<Indicadores | null>(null);
   const [usos, setUsos] = useState<UsoRecente[] | null>(null);
   const [erro, setErro] = useState('');
+  const [refri, setRefri] = useState<{ liberados: number; com_erro: number; com_aviso: number } | null>(null);
+  const [exportando, setExportando] = useState(false);
 
   useEffect(() => {
     supabase.rpc('indicadores_admin').then(({ data, error }) => {
@@ -49,7 +52,21 @@ export function VisaoGeral() {
         if (error) setErro(mensagemErro(error));
         setUsos((data as unknown as UsoRecente[]) ?? []);
       });
+    supabase.rpc('relatorio_refriclube').then(({ data }) => setRefri(data as typeof refri));
   }, []);
+
+  async function exportarRefriclube() {
+    setExportando(true);
+    const { data, error } = await supabase.from('vw_associados').select('*').eq('refriclube_ativo', true).order('numero');
+    setExportando(false);
+    if (error) return setErro(mensagemErro(error));
+    const lista = (data as LinhaAssociado[]) ?? [];
+    const hoje = new Date().toISOString().slice(0, 10);
+    baixarCsv(`refriclube-liberados-${hoje}.csv`, [
+      ['Nº', 'Nome', 'E-mail', 'Status no clube', 'Liberado desde (última sincronização)'],
+      ...lista.map((a) => [a.numero, a.nome, a.email, a.status, a.refriclube_sincronizado_em ? dataHora(a.refriclube_sincronizado_em) : '']),
+    ]);
+  }
 
   const mes = new Date().toLocaleDateString('pt-BR', { month: 'long' });
 
@@ -75,6 +92,23 @@ export function VisaoGeral() {
           </div>
         </>
       )}
+
+      <section className="adm-bloco">
+        <div className="row-between gap-10">
+          <div className="col gap-2">
+            <h2 className="h-sm">Refriclube</h2>
+            <span className="muted small">
+              {refri ? `${refri.liberados} associados com acesso liberado agora` : 'Carregando…'}
+              {refri && refri.com_erro > 0 ? ` · ${refri.com_erro} com falha de sincronização` : ''}
+              {refri && refri.com_aviso > 0 ? ` · ${refri.com_aviso} precisam de atenção` : ''}
+            </span>
+          </div>
+          <button className="btn outline sm" onClick={exportarRefriclube} disabled={exportando}>
+            {exportando ? 'Gerando…' : 'Exportar lista de liberados'}
+          </button>
+        </div>
+        <span className="muted xsmall">O acesso é liberado sozinho quando o associado fica ativo e revogado quando cancela ou atrasa. Uma conferência automática roda todo dia às 6h15.</span>
+      </section>
 
       <section className="adm-bloco">
         <div className="row-between">
