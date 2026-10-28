@@ -1,35 +1,84 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { useAuth } from './auth/AuthProvider';
 import { TabBar } from './components/TabBar';
+import { Carregando } from './components/Estados';
 import { Inicio } from './pages/Inicio';
 import { Carteirinha } from './pages/Carteirinha';
 import { Ofertas } from './pages/Ofertas';
 import { Refriclube } from './pages/Refriclube';
 import { Conta } from './pages/Conta';
 import { Balcao } from './pages/Balcao';
+import { Entrar } from './pages/auth/Entrar';
+import { Cadastro } from './pages/auth/Cadastro';
+import { RecuperarSenha } from './pages/auth/RecuperarSenha';
+import { NovaSenha } from './pages/auth/NovaSenha';
 
 export function App() {
   const { pathname } = useLocation();
-  const balcao = pathname.startsWith('/balcao');
+  const { recuperandoSenha } = useAuth();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
+  // Link de recuperação de senha leva direto para a tela de nova senha
+  if (recuperandoSenha && pathname !== '/nova-senha') return <Navigate to="/nova-senha" replace />;
+
   return (
-    <div className={balcao ? 'shell dark-shell' : 'shell'}>
-      <div className="screen">
-        <Routes>
-          <Route path="/" element={<Inicio />} />
-          <Route path="/carteirinha" element={<Carteirinha />} />
-          <Route path="/ofertas" element={<Ofertas />} />
-          <Route path="/refriclube" element={<Refriclube />} />
-          <Route path="/conta" element={<Conta />} />
-          <Route path="/balcao" element={<Balcao />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+    <Routes>
+      <Route path="/entrar" element={<Entrar />} />
+      <Route path="/cadastro" element={<Cadastro />} />
+      <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+      <Route path="/nova-senha" element={<NovaSenha />} />
+
+      <Route path="/balcao" element={<Protegido papeis={['vendedor', 'admin']} escuro><Balcao /></Protegido>} />
+
+      <Route path="/" element={<Protegido comMenu><Inicio /></Protegido>} />
+      <Route path="/carteirinha" element={<Protegido comMenu><Carteirinha /></Protegido>} />
+      <Route path="/ofertas" element={<Protegido comMenu><Ofertas /></Protegido>} />
+      <Route path="/refriclube" element={<Protegido comMenu><Refriclube /></Protegido>} />
+      <Route path="/conta" element={<Protegido comMenu><Conta /></Protegido>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+function Protegido({
+  children,
+  comMenu,
+  escuro,
+  papeis,
+}: {
+  children: ReactNode;
+  comMenu?: boolean;
+  escuro?: boolean;
+  papeis?: ('associado' | 'vendedor' | 'admin')[];
+}) {
+  const { carregando, sessao, perfil } = useAuth();
+  const local = useLocation();
+
+  if (carregando) {
+    return (
+      <div className="shell">
+        <Carregando />
       </div>
-      {!balcao && <TabBar />}
+    );
+  }
+  if (!sessao) return <Navigate to="/entrar" replace state={{ de: local.pathname }} />;
+  if (!perfil) {
+    return (
+      <div className="shell">
+        <Carregando texto="Carregando seu cadastro…" />
+      </div>
+    );
+  }
+  if (papeis && !papeis.includes(perfil.papel)) return <Navigate to="/" replace />;
+
+  return (
+    <div className={escuro ? 'shell dark-shell' : 'shell'}>
+      <div className="screen">{children}</div>
+      {comMenu && <TabBar />}
     </div>
   );
 }
