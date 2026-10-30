@@ -4,7 +4,6 @@ import { supabase } from '../../lib/supabase';
 import { mensagemErro } from '../../lib/formato';
 import { useAuth } from '../../auth/AuthProvider';
 import { Erro } from '../../components/Estados';
-import { BotaoGoogle } from '../../components/BotaoGoogle';
 import { AuthLayout } from './AuthLayout';
 
 export function Entrar() {
@@ -43,7 +42,6 @@ export function Entrar() {
           {enviando ? 'Entrando…' : 'Entrar'}
         </button>
       </form>
-      <BotaoGoogle />
       <Link to="/recuperar-senha" className="small strong text-center">Esqueci minha senha</Link>
       <p className="small muted text-center">
         Ainda não é associado? <Link to="/cadastro" className="strong">Criar conta</Link>
